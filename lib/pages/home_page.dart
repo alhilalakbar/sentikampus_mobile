@@ -3,14 +3,12 @@ import 'package:flutter/material.dart';
 import '../services/sentiment_api.dart';
 import '../models/sentiment_result.dart';
 
-
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
-
 
 class _HomePageState extends State<HomePage> {
   final TextEditingController controller = TextEditingController();
@@ -19,7 +17,6 @@ class _HomePageState extends State<HomePage> {
   SentimentResult? result;
   String? errorMessage;
   bool isLoading = false;
-
 
   Future<void> analyzeComment() async {
     final text = controller.text.trim();
@@ -49,20 +46,25 @@ class _HomePageState extends State<HomePage> {
     try {
       final data = await api.predict(text);
 
+      if (!mounted) return;
+
       setState(() {
         result = data;
       });
     } catch (e) {
+      if (!mounted) return;
+
       setState(() {
         errorMessage = 'Gagal terhubung ke API.';
       });
     } finally {
-      setState(() {
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
-
 
   @override
   void dispose() {
@@ -70,13 +72,10 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('SentiKampus'),
-      ),
+      appBar: AppBar(title: const Text('SentiKampus')),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -84,10 +83,7 @@ class _HomePageState extends State<HomePage> {
           children: [
             const Text(
               'Analisis Sentiment Komentar',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
 
             const SizedBox(height: 20),
@@ -106,17 +102,12 @@ class _HomePageState extends State<HomePage> {
 
             ElevatedButton(
               onPressed: isLoading ? null : analyzeComment,
-              child: Text(
-                isLoading ? 'Menganalisis...' : 'Analisis',
-              ),
+              child: Text(isLoading ? 'Menganalisis...' : 'Analisis'),
             ),
 
             const SizedBox(height: 24),
 
-            if (isLoading)
-              const Center(
-                child: CircularProgressIndicator(),
-              ),
+            if (isLoading) const Center(child: CircularProgressIndicator()),
 
             if (result != null) ...[
               Text(
@@ -129,19 +120,12 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 8),
               Text(
                 'Score: ${result!.score}',
-                style: const TextStyle(
-                  fontSize: 18,
-                ),
+                style: const TextStyle(fontSize: 18),
               ),
             ],
 
             if (errorMessage != null)
-              Text(
-                errorMessage!,
-                style: const TextStyle(
-                  fontSize: 16,
-                ),
-              ),
+              Text(errorMessage!, style: const TextStyle(fontSize: 16)),
           ],
         ),
       ),
